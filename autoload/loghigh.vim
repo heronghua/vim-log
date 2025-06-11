@@ -141,7 +141,7 @@ function! loghigh#ApplyQFHighlight() abort
   syntax clear
   
   " 匹配整个 quickfix 行（直接显示纯文本）
-  syntax match qfLogEntry /^.*$/ contains=qfLogDebug,qfLogInfo,qfLogWarn,qfLogError,qfLogFatal
+  syntax match qfLogEntry /^.*$/ contains=qfLogDebug,qfLogInfo,qfLogWarn,qfLogError,qfLogFatal,qfLogVerbose
   
   " 定义日志语法规则 - 根据时间格式区分日志级别
   syntax match qfLogDebug /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} D.+/ contained
@@ -150,10 +150,19 @@ function! loghigh#ApplyQFHighlight() abort
   syntax match qfLogError /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} E.+/ contained
   syntax match qfLogFatal /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} F.+/ contained
 
+  "another style
+  syntax match qfLogDebug /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} +\d+ +\d+ D.*/
+  syntax match qfLogInfo /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3}  +\d+ +\d+ I.*/
+  syntax match qfLogWarn /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} +\d+ +\d+ W.*/
+  syntax match qfLogError /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} +\d+ +\d+ E.*/
+  syntax match qfLogFatal /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} +\d+ +\d+ F.*/
+  syntax match qfLogVerbose /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} +\d+ +\d+ V.*/
+
   " 设置高亮
   highlight qfLogDebug ctermfg=Cyan guifg=#00ffff
   highlight qfLogInfo ctermfg=Green guifg=#00ff00
   highlight qfLogWarn ctermfg=Yellow guifg=#ffff00
+  highlight qfLogVerbose ctermfg=White guifg=#ffffff
   highlight qfLogError ctermfg=Red guifg=#ff0000 cterm=bold gui=bold
   highlight qfLogFatal ctermfg=Red guifg=#ff0000 cterm=bold,underline gui=bold,underline
 endfunction

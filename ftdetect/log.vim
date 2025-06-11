@@ -1,1 +1,1 @@
-autocmd BufRead,BufNewFile *.log,*.log.* set filetype=log
+autocmd BufRead,BufNewFile *.log*,_log_,*dumpsys_camera*,logcat*.txt  set filetype=log
