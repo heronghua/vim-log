@@ -54,20 +54,22 @@ function! loghigh#Search(pattern) abort
   execute l:current_win . 'wincmd w'
 endfunction
 
-" 调整 quickfix 窗口大小 (私有函数)
+" 调整 quickfix 窗口大小
 function! s:adjust_quickfix_size() abort
   if &filetype != 'qf'
     return
   endif
   
-  " 计算 80% 的屏幕高度
-  let total_lines = &lines  " 获取终端总行数
-  let qf_height = float2nr(total_lines * 0.8)
+  " 获取配置值或使用默认值
+  let ratio = get(g:, 'loghigh_qf_height_ratio', 0.8)
+  let min_height = get(g:, 'loghigh_qf_min_height', 10)
+  let max_height = get(g:, 'loghigh_qf_max_height', 40)
   
-  " 设置最小和最大高度限制
-  let min_height = 10
-  let max_height = 40
+  " 计算高度
+  let total_lines = &lines
+  let qf_height = float2nr(total_lines * ratio)
   
+  " 应用高度限制
   if qf_height < min_height
     let qf_height = min_height
   elseif qf_height > max_height
@@ -76,6 +78,56 @@ function! s:adjust_quickfix_size() abort
   
   " 设置窗口高度
   execute 'resize ' . qf_height
+endfunction
+
+" 增加 quickfix 窗口高度
+function! loghigh#IncreaseQFHeight() abort
+  " 找到 quickfix 窗口
+  let qf_win = s:find_quickfix_window()
+  if qf_win == -1
+    echo "Quickfix window not found"
+    return
+  endif
+  
+  " 切换到 quickfix 窗口
+  let curr_win = winnr()
+  execute qf_win . 'wincmd w'
+  
+  " 增加高度 (1 行)
+  execute 'resize +1'
+  
+  " 返回原窗口
+  execute curr_win . 'wincmd w'
+endfunction
+
+" 减少 quickfix 窗口高度
+function! loghigh#DecreaseQFHeight() abort
+  " 找到 quickfix 窗口
+  let qf_win = s:find_quickfix_window()
+  if qf_win == -1
+    echo "Quickfix window not found"
+    return
+  endif
+  
+  " 切换到 quickfix 窗口
+  let curr_win = winnr()
+  execute qf_win . 'wincmd w'
+  
+  " 减少高度 (1 行)
+  execute 'resize -1'
+  
+  " 返回原窗口
+  execute curr_win . 'wincmd w'
+endfunction
+
+" 查找 quickfix 窗口 (私有函数)
+function! s:find_quickfix_window() abort
+  for i in range(1, winnr('$'))
+    if getwinvar(i, '&buftype') == 'quickfix'
+      return i
+    endif
+  endfor
+  return -1
 endfunction
 
 " 应用高亮到 quickfix
