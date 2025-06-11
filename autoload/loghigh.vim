@@ -1,10 +1,10 @@
 " 存储搜索模式和搜索高亮ID
 let s:last_search_pattern = ''
-let s:search_highlight_id = 0
+let s:search_highlight_ids = []
 
-" 搜索函数
+" 搜索函数 {{{
 function! loghigh#Search(pattern) abort
-  " 保存搜索模式用于高亮
+  " 保存原始搜索模式
   let s:last_search_pattern = a:pattern
   
   " 保存当前窗口
@@ -15,12 +15,9 @@ function! loghigh#Search(pattern) abort
   let l:matches = []
   let l:index = 1
   
-  " 编译正则表达式
+  " 编译正则表达式 - 处理所有特殊字符
   try
-    let l:regex = a:pattern
-    if l:regex !~# '^\\v'
-      let l:regex = '\v' . l:regex
-    endif
+    let l:regex = s:create_safe_search_regex(a:pattern)
   catch
     echo "Invalid regex pattern: " . a:pattern
     return
@@ -58,6 +55,122 @@ function! loghigh#Search(pattern) abort
   " 返回原窗口
   execute l:current_win . 'wincmd w'
 endfunction
+"}}}
+
+" 创建安全的搜索正则表达式 - 处理所有特殊字符{{{
+function! s:create_safe_search_regex(pattern) abort
+  " 如果模式以 \v 开头，直接使用
+  if a:pattern =~# '^\\v'
+    return a:pattern
+  endif
+  
+  " 检查是否需要添加分组
+  if s:need_grouping(a:pattern)
+    return '\v(' . a:pattern . ')'
+  endif
+  
+  " 否则添加 \v 前缀
+  return '\v' . a:pattern
+endfunction
+"}}}
+
+" 检查是否需要添加分组 {{{
+function! s:need_grouping(pattern) abort
+  " 包含未转义的 | 符号
+  if a:pattern =~ '\(^\|[^\\]\)|'
+    return 1
+  endif
+  
+  " 包含未转义的 ( 或 ) 符号
+  if a:pattern =~ '\(^\|[^\\]\)(' || a:pattern =~ '\(^\|[^\\])\)'
+    return 1
+  endif
+  
+  " 包含未转义的 + 或 * 符号
+  if a:pattern =~ '\(^\|[^\\]\)[+*]'
+    return 1
+  endif
+  
+  " 包含字符集 [...]
+  if a:pattern =~ '\[.*\]'
+    return 1
+  endif
+  
+  return 0
+endfunction
+"}}}
+
+" 应用搜索关键词高亮 - 处理所有特殊字符{{{
+function! s:apply_search_highlight() abort
+  " 安全清除之前的搜索高亮
+  for id in s:search_highlight_ids
+    silent! call matchdelete(id)
+  endfor
+  let s:search_highlight_ids = []
+  
+  " 如果没有搜索模式或模式为空，返回
+  if empty(s:last_search_pattern)
+    return
+  endif
+  
+  try
+    " 创建高亮规则
+    let hl_group = 'qfSearchKeyword'
+    
+    " 处理复杂模式 - 拆分为简单模式
+    let patterns = loghigh#Split_complex_pattern(s:last_search_pattern)
+    
+    for pattern in patterns
+      " 创建安全的显示模式
+      let display_pattern = s:create_safe_display_pattern(pattern)
+      
+      " 尝试创建匹配
+      let id = matchadd(hl_group, display_pattern, 10)
+      call add(s:search_highlight_ids, id)
+    endfor
+  catch /^Vim\%((\a\+)\)\=:E/
+    " 显示错误但继续执行
+    echo "Error applying search highlight: " . v:exception
+  endtry
+endfunction
+"}}}
+
+" 拆分复杂模式为简单模式 {{{
+function! loghigh#Split_complex_pattern(pattern) abort
+  " 如果模式是简单的单词，直接返回
+  if a:pattern =~ '^\w\+$'
+    return [a:pattern]
+  endif
+  
+  " 处理 | 分隔的多个模式
+  if a:pattern =~ '\(^\|[^\\]\)|'
+    let patterns = split(a:pattern, '\(^\|[^\\]\)\zs|')
+    
+    " 清理转义字符
+    return map(patterns, {_, p -> substitute(p, '\\|', '|', 'g')})
+  endif
+  
+  " 无法拆分的复杂模式
+  return [a:pattern]
+endfunction
+"}}}
+
+" 创建安全的显示模式 {{{
+function! s:create_safe_display_pattern(pattern) abort
+  " 如果是简单单词，直接返回
+  if a:pattern =~ '^\w\+$'
+    return a:pattern
+  endif
+  
+  " 处理包含特殊字符的模式
+  if a:pattern =~ '\(^\|[^\\]\)[.*+?()|{}\[\]]'
+    return '\v(' . a:pattern . ')'
+  endif
+  
+  " 其他情况直接返回
+  return a:pattern
+endfunction
+"}}}
 
 " 调整 quickfix 窗口大小
 function! s:adjust_quickfix_size() abort
@@ -177,67 +290,6 @@ function! loghigh#ApplyQFHighlight() abort
   
   " 应用搜索关键词高亮
   call s:apply_search_highlight()
-endfunction
-
-" 应用搜索关键词高亮 - 完全修复版本
-function! s:apply_search_highlight() abort
-  " 安全清除之前的搜索高亮
-  if s:search_highlight_id > 0
-    " 方法1: 使用 silent! 防止错误
-    silent! call matchdelete(s:search_highlight_id)
-    
-    " 方法2: 检查匹配是否存在
-    let matches = getmatches()
-    let match_exists = 0
-    
-    for match in matches
-      if match['id'] == s:search_highlight_id
-        let match_exists = 1
-        break
-      endif
-    endfor
-    
-    " 如果匹配存在但 silent! 未能删除，再次尝试删除
-    if match_exists
-      silent! call matchdelete(s:search_highlight_id)
-    endif
-    
-    let s:search_highlight_id = 0
-  endif
-  
-  " 如果没有搜索模式或模式为空，返回
-  if empty(s:last_search_pattern)
-    return
-  endif
-  
-  try
-    " 创建高亮规则
-    let hl_group = 'qfSearchKeyword'
-    
-    " 尝试创建匹配
-    let s:search_highlight_id = matchadd(hl_group, s:last_search_pattern)
-    
-    " 验证匹配是否成功创建
-    let matches = getmatches()
-    let match_created = 0
-    
-    for match in matches
-      if match['id'] == s:search_highlight_id
-        let match_created = 1
-        break
-      endif
-    endfor
-    
-    if !match_created
-      echo "Failed to create search highlight"
-      let s:search_highlight_id = 0
-    endif
-    
-  catch /^Vim\%((\a\+)\)\=:E/
-    " 显示错误但继续执行
-    echo "Error applying search highlight: " . v:exception
-    let s:search_highlight_id = 0
-  endtry
 endfunction
 
 " 自动为 quickfix 应用日志高亮
