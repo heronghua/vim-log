@@ -1,5 +1,12 @@
-" 搜索函数 - 支持正则表达式
+" 存储搜索模式和搜索高亮ID
+let s:last_search_pattern = ''
+let s:search_highlight_id = 0
+
+" 搜索函数
 function! loghigh#Search(pattern) abort
+  " 保存搜索模式用于高亮
+  let s:last_search_pattern = a:pattern
+  
   " 保存当前窗口
   let l:current_win = winnr()
   
@@ -11,7 +18,6 @@ function! loghigh#Search(pattern) abort
   " 编译正则表达式
   try
     let l:regex = a:pattern
-    " 如果模式不是以 \v 开头，添加 magic 模式
     if l:regex !~# '^\\v'
       let l:regex = '\v' . l:regex
     endif
@@ -20,9 +26,8 @@ function! loghigh#Search(pattern) abort
     return
   endtry
   
-  " 查找匹配行并存储纯内容
+  " 查找匹配行
   for line in l:lines
-    " 使用 match() 函数支持正则表达式
     if match(line, l:regex) >= 0
       call add(l:matches, {
             \ 'bufnr': bufnr('%'),
@@ -43,11 +48,11 @@ function! loghigh#Search(pattern) abort
   
   " 打开 quickfix 窗口
   copen
-
+  
   " 调整 quickfix 窗口大小
   call s:adjust_quickfix_size()
   
-  " 应用日志高亮到 quickfix
+  " 应用日志高亮
   call loghigh#ApplyQFHighlight()
   
   " 返回原窗口
@@ -130,7 +135,7 @@ function! s:find_quickfix_window() abort
   return -1
 endfunction
 
-" 应用高亮到 quickfix
+" 应用高亮到 quickfix - 添加搜索关键词高亮
 function! loghigh#ApplyQFHighlight() abort
   " 确保在 quickfix 窗口
   if &filetype != 'qf'
@@ -158,6 +163,10 @@ function! loghigh#ApplyQFHighlight() abort
   syntax match qfLogFatal /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} +\d+ +\d+ F.*/
   syntax match qfLogVerbose /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} +\d+ +\d+ V.*/
 
+  " 添加搜索关键词高亮 - 使用特殊组以便动态更新
+  syntax match qfSearchKeyword /\v\c/ contained
+  highlight qfSearchKeyword ctermfg=Red guifg=#ff0000 cterm=bold,underline gui=bold,underline
+  
   " 设置高亮
   highlight qfLogDebug ctermfg=Cyan guifg=#00ffff
   highlight qfLogInfo ctermfg=Green guifg=#00ff00
@@ -165,7 +174,74 @@ function! loghigh#ApplyQFHighlight() abort
   highlight qfLogVerbose ctermfg=White guifg=#ffffff
   highlight qfLogError ctermfg=Red guifg=#ff0000 cterm=bold gui=bold
   highlight qfLogFatal ctermfg=Red guifg=#ff0000 cterm=bold,underline gui=bold,underline
+  
+  " 应用搜索关键词高亮
+  call s:apply_search_highlight()
+endfunction
+
+" 应用搜索关键词高亮 - 完全修复版本
+function! s:apply_search_highlight() abort
+  " 安全清除之前的搜索高亮
+  if s:search_highlight_id > 0
+    " 方法1: 使用 silent! 防止错误
+    silent! call matchdelete(s:search_highlight_id)
+    
+    " 方法2: 检查匹配是否存在
+    let matches = getmatches()
+    let match_exists = 0
+    
+    for match in matches
+      if match['id'] == s:search_highlight_id
+        let match_exists = 1
+        break
+      endif
+    endfor
+    
+    " 如果匹配存在但 silent! 未能删除，再次尝试删除
+    if match_exists
+      silent! call matchdelete(s:search_highlight_id)
+    endif
+    
+    let s:search_highlight_id = 0
+  endif
+  
+  " 如果没有搜索模式或模式为空，返回
+  if empty(s:last_search_pattern)
+    return
+  endif
+  
+  try
+    " 创建高亮规则
+    let hl_group = 'qfSearchKeyword'
+    
+    " 尝试创建匹配
+    let s:search_highlight_id = matchadd(hl_group, s:last_search_pattern)
+    
+    " 验证匹配是否成功创建
+    let matches = getmatches()
+    let match_created = 0
+    
+    for match in matches
+      if match['id'] == s:search_highlight_id
+        let match_created = 1
+        break
+      endif
+    endfor
+    
+    if !match_created
+      echo "Failed to create search highlight"
+      let s:search_highlight_id = 0
+    endif
+    
+  catch /^Vim\%((\a\+)\)\=:E/
+    " 显示错误但继续执行
+    echo "Error applying search highlight: " . v:exception
+    let s:search_highlight_id = 0
+  endtry
 endfunction
 
 " 自动为 quickfix 应用日志高亮
 autocmd FileType qf call loghigh#ApplyQFHighlight()
+
+" 当 quickfix 窗口内容变化时重新应用高亮
+autocmd BufWinEnter quickfix call s:apply_search_highlight()
