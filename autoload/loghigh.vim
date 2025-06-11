@@ -43,12 +43,39 @@ function! loghigh#Search(pattern) abort
   
   " 打开 quickfix 窗口
   copen
+
+  " 调整 quickfix 窗口大小
+  call s:adjust_quickfix_size()
   
   " 应用日志高亮到 quickfix
   call loghigh#ApplyQFHighlight()
   
   " 返回原窗口
   execute l:current_win . 'wincmd w'
+endfunction
+
+" 调整 quickfix 窗口大小 (私有函数)
+function! s:adjust_quickfix_size() abort
+  if &filetype != 'qf'
+    return
+  endif
+  
+  " 计算 80% 的屏幕高度
+  let total_lines = &lines  " 获取终端总行数
+  let qf_height = float2nr(total_lines * 0.8)
+  
+  " 设置最小和最大高度限制
+  let min_height = 10
+  let max_height = 40
+  
+  if qf_height < min_height
+    let qf_height = min_height
+  elseif qf_height > max_height
+    let qf_height = max_height
+  endif
+  
+  " 设置窗口高度
+  execute 'resize ' . qf_height
 endfunction
 
 " 应用高亮到 quickfix
