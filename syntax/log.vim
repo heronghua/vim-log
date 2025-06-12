@@ -5,20 +5,20 @@ endif
 syntax clear
 
 " 定义匹配规则 - 与 quickfix 语法保持一致
-syntax match logDebug /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} D.*$/
-syntax match logInfo /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} I.*$/
-syntax match logWarn /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} W.*$/
-syntax match logError /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} E.*$/
-syntax match logFatal /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} F.*$/
-syntax match logVerbose /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} V.*$/
+syntax match logDebug /\v\d{2}-\d{2} +\d{2}:\d{2}:\d{2}.\d{3} D.*$/
+syntax match logInfo /\v\d{2}-\d{2} +\d{2}:\d{2}:\d{2}.\d{3} I.*$/
+syntax match logWarn /\v\d{2}-\d{2} +\d{2}:\d{2}:\d{2}.\d{3} W.*$/
+syntax match logError /\v\d{2}-\d{2} +\d{2}:\d{2}:\d{2}.\d{3} E.*$/
+syntax match logFatal /\v\d{2}-\d{2} +\d{2}:\d{2}:\d{2}.\d{3} F.*$/
+syntax match logVerbose /\v\d{2}-\d{2} +\d{2}:\d{2}:\d{2}.\d{3} V.*$/
 
   "another style
-  syntax match logDebug /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} +\d+ +\d+ D.*/
-  syntax match logInfo /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3}  +\d+ +\d+ I.*/
-  syntax match logWarn /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} +\d+ +\d+ W.*/
-  syntax match logError /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} +\d+ +\d+ E.*/
-  syntax match logFatal /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} +\d+ +\d+ F.*/
-  syntax match logVerbose /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} +\d+ +\d+ V.*/
+  syntax match logDebug /\v\d{2}-\d{2} +\d{2}:\d{2}:\d{2}.\d{3} +\d+ +\d+ D.*/
+  syntax match logInfo /\v\d{2}-\d{2} +\d{2}:\d{2}:\d{2}.\d{3} +\d+ +\d+ I.*/
+  syntax match logWarn /\v\d{2}-\d{2} +\d{2}:\d{2}:\d{2}.\d{3} +\d+ +\d+ W.*/
+  syntax match logError /\v\d{2}-\d{2} +\d{2}:\d{2}:\d{2}.\d{3} +\d+ +\d+ E.*/
+  syntax match logFatal /\v\d{2}-\d{2} +\d{2}:\d{2}:\d{2}.\d{3} +\d+ +\d+ F.*/
+  syntax match logVerbose /\v\d{2}-\d{2} +\d{2}:\d{2}:\d{2}.\d{3} +\d+ +\d+ V.*/
 
 " 设置高亮
 highlight logDebug ctermfg=Cyan guifg=#00ffff
