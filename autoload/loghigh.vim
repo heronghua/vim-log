@@ -262,19 +262,19 @@ function! loghigh#ApplyQFHighlight() abort
   syntax match qfLogEntry /^.*$/ contains=qfLogDebug,qfLogInfo,qfLogWarn,qfLogError,qfLogFatal,qfLogVerbose
   
   " 定义日志语法规则 - 根据时间格式区分日志级别
-  syntax match qfLogDebug /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} D.+/ contained
-  syntax match qfLogInfo /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} I.+/ contained
-  syntax match qfLogWarn /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} W.+/ contained
-  syntax match qfLogError /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} E.+/ contained
-  syntax match qfLogFatal /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} F.+/ contained
+  syntax match qfLogDebug /\v\d{2}-\d{2} +\d{2}:\d{2}:\d{2}.\d{3} D.+/ contained
+  syntax match qfLogInfo /\v\d{2}-\d{2} +\d{2}:\d{2}:\d{2}.\d{3} I.+/ contained
+  syntax match qfLogWarn /\v\d{2}-\d{2} +\d{2}:\d{2}:\d{2}.\d{3} W.+/ contained
+  syntax match qfLogError /\v\d{2}-\d{2} +\d{2}:\d{2}:\d{2}.\d{3} E.+/ contained
+  syntax match qfLogFatal /\v\d{2}-\d{2} +\d{2}:\d{2}:\d{2}.\d{3} F.+/ contained
 
   "another style
-  syntax match qfLogDebug /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} +\d+ +\d+ D.*/
-  syntax match qfLogInfo /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3}  +\d+ +\d+ I.*/
-  syntax match qfLogWarn /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} +\d+ +\d+ W.*/
-  syntax match qfLogError /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} +\d+ +\d+ E.*/
-  syntax match qfLogFatal /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} +\d+ +\d+ F.*/
-  syntax match qfLogVerbose /\v\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3} +\d+ +\d+ V.*/
+  syntax match qfLogDebug /\v\d{2}-\d{2} +\d{2}:\d{2}:\d{2}.\d{3} +\d+ +\d+ D.*/
+  syntax match qfLogInfo /\v\d{2}-\d{2} +\d{2}:\d{2}:\d{2}.\d{3} +\d+ +\d+ I.*/
+  syntax match qfLogWarn /\v\d{2}-\d{2} +\d{2}:\d{2}:\d{2}.\d{3} +\d+ +\d+ W.*/
+  syntax match qfLogError /\v\d{2}-\d{2} +\d{2}:\d{2}:\d{2}.\d{3} +\d+ +\d+ E.*/
+  syntax match qfLogFatal /\v\d{2}-\d{2} +\d{2}:\d{2}:\d{2}.\d{3} +\d+ +\d+ F.*/
+  syntax match qfLogVerbose /\v\d{2}-\d{2} +\d{2}:\d{2}:\d{2}.\d{3} +\d+ +\d+ V.*/
 
   " 添加搜索关键词高亮 - 使用特殊组以便动态更新
   syntax match qfSearchKeyword /\v\c/ contained
